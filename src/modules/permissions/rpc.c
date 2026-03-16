@@ -103,9 +103,14 @@ void rpc_address_reload(rpc_t *rpc, void *c)
 		return;
 	}
 
-	if(reload_address_table_cmd() != 1) {
-		rpc->fault(c, 500, "Reload failed.");
-		goto done;
+	// only reload the hash buckets then, when the cache is activated (db_mode = 1)
+	if(perm_db_mode == ENABLE_CACHE) {
+		if(reload_address_table_cmd() != 1) {
+			rpc->fault(c, 500, "Reload failed.");
+			goto done;
+		}
+	} else {
+		LM_DBG("Skip trusted sources reload in hash buckets, caching is disabled.\n");
 	}
 
 	rpc->rpl_printf(c, "Reload OK");
